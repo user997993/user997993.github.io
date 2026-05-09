@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora FIRE – Simulador de Independencia Financiera</title>
+  <meta name="description" content="Calcula cuánto necesitas para jubilarte anticipadamente con el método FIRE. Simulador gratuito de independencia financiera con proyección de patrimonio, interés compuesto y tasa de retirada segura." />
+  <meta name="keywords" content="calculadora FIRE, independencia financiera, jubilación anticipada, simulador inversión, interés compuesto, tasa de retirada segura, FIRE España" />
+  <meta property="og:title" content="Calculadora FIRE – ¿Cuándo puedes dejar de trabajar?" />
+  <meta property="og:description" content="Simulador gratuito de independencia financiera. Calcula tu número FIRE, los años que necesitas y la proyección de tu patrimonio." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+  <style>
+    :root {
+      --green-dark: #1a3a2a;
+      --green-mid: #2d6a4f;
+      --green-accent: #40916c;
+      --green-light: #74c69d;
+      --green-pale: #d8f3dc;
+      --amber: #e9c46a;
+      --amber-dark: #b5830a;
+      --coral: #e76f51;
+      --bg: #f8f9f4;
+      --bg-card: #ffffff;
+      --text-primary: #111f17;
+      --text-secondary: #4a5e52;
+      --text-muted: #8a9e92;
+      --border: rgba(45,106,79,0.15);
+      --shadow: 0 2px 20px rgba(26,58,42,0.07);
+      --radius: 12px;
+      --radius-lg: 20px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.65;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(248,249,244,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 1080px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.25rem; color: var(--green-dark);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--green-accent); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.875rem; font-weight: 500;
+      color: var(--text-secondary); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--green-accent); }
+    .nav-cta {
+      background: var(--green-dark); color: #fff;
+      font-size: 0.875rem; font-weight: 500;
+      padding: 8px 18px; border-radius: 8px;
+      text-decoration: none; transition: background 0.2s;
+    }
+    .nav-cta:hover { background: var(--green-mid); }
+
+    /* HERO */
+    .hero {
+      max-width: 1080px; margin: 0 auto;
+      padding: 5rem 2rem 3rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;
+      align-items: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--green-accent);
+      background: var(--green-pale); padding: 4px 12px;
+      border-radius: 100px; margin-bottom: 1.25rem;
+    }
+    .hero-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green-accent); }
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.2rem, 4vw, 3.2rem);
+      line-height: 1.15; color: var(--green-dark);
+      margin-bottom: 1.25rem;
+    }
+    h1 em { font-style: italic; color: var(--green-accent); }
+    .hero-desc {
+      font-size: 1.05rem; color: var(--text-secondary);
+      margin-bottom: 2rem; max-width: 480px;
+    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--green-dark); color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem; font-weight: 500;
+      padding: 13px 28px; border-radius: 10px;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: var(--green-mid); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; color: var(--green-dark);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem; font-weight: 500;
+      padding: 13px 28px; border-radius: 10px;
+      text-decoration: none; border: 1.5px solid var(--border);
+      cursor: pointer; transition: border-color 0.2s;
+      display: inline-block;
+    }
+    .btn-ghost:hover { border-color: var(--green-accent); }
+
+    .hero-stats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .hero-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .hero-stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem; color: var(--green-dark);
+    }
+    .hero-stat-label {
+      font-size: 0.8rem; color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .hero-stat.accent { background: var(--green-dark); }
+    .hero-stat.accent .hero-stat-num { color: var(--green-light); }
+    .hero-stat.accent .hero-stat-label { color: rgba(255,255,255,0.6); }
+
+    /* CALCULATOR SECTION */
+    #calculadora {
+      background: var(--green-dark);
+      padding: 5rem 2rem;
+      position: relative; overflow: hidden;
+    }
+    #calculadora::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(64,145,108,0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .calc-inner { max-width: 1080px; margin: 0 auto; }
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      color: #fff; margin-bottom: 0.5rem;
+    }
+    .section-sub { font-size: 1rem; color: rgba(255,255,255,0.6); margin-bottom: 2.5rem; }
+
+    .calc-grid {
+      display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem;
+      align-items: start;
+    }
+
+    .calc-panel {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-lg); padding: 1.75rem;
+    }
+    .panel-section { margin-bottom: 1.5rem; }
+    .panel-section:last-child { margin-bottom: 0; }
+    .panel-label {
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--green-light);
+      margin-bottom: 1rem;
+    }
+    .slider-group { margin-bottom: 1rem; }
+    .slider-header {
+      display: flex; justify-content: space-between;
+      align-items: baseline; margin-bottom: 6px;
+    }
+    .slider-header label { font-size: 0.82rem; color: rgba(255,255,255,0.75); }
+    .slider-val {
+      font-size: 0.9rem; font-weight: 600; color: #fff;
+      background: rgba(255,255,255,0.1);
+      padding: 2px 10px; border-radius: 6px;
+    }
+    input[type="range"] {
+      width: 100%; appearance: none; height: 4px;
+      background: rgba(255,255,255,0.2); border-radius: 2px; outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none; width: 16px; height: 16px;
+      border-radius: 50%; background: var(--green-light);
+      cursor: pointer; transition: transform 0.15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--green-light); cursor: pointer; border: none;
+    }
+    .panel-divider { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.25rem 0; }
+
+    .calc-results { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .metric-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius); padding: 1rem 1.1rem;
+    }
+    .metric-card.highlight {
+      background: var(--green-accent);
+      border-color: var(--green-light);
+    }
+    .metric-card-label { font-size: 0.72rem; color: rgba(255,255,255,0.55); margin-bottom: 4px; }
+    .metric-card.highlight .metric-card-label { color: rgba(255,255,255,0.8); }
+    .metric-card-val { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: #fff; }
+    .metric-card-sub { font-size: 0.7rem; color: rgba(255,255,255,0.45); margin-top: 2px; }
+    .metric-card.highlight .metric-card-sub { color: rgba(255,255,255,0.75); }
+
+    .chart-container {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-lg); padding: 1.5rem;
+    }
+    .chart-legend {
+      display: flex; gap: 20px; margin-bottom: 1rem;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: rgba(255,255,255,0.6); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+    .chart-canvas-wrap { position: relative; height: 240px; }
+
+    .fire-status-bar {
+      border-radius: var(--radius); padding: 1rem 1.25rem;
+      font-size: 0.88rem; font-weight: 500;
+    }
+    .fire-status-bar.ok { background: rgba(116,198,157,0.15); color: var(--green-light); border: 1px solid rgba(116,198,157,0.3); }
+    .fire-status-bar.warn { background: rgba(233,196,106,0.12); color: var(--amber); border: 1px solid rgba(233,196,106,0.3); }
+    .fire-status-bar.bad { background: rgba(231,111,81,0.12); color: #f4a99a; border: 1px solid rgba(231,111,81,0.3); }
+
+    .table-toggle {
+      display: flex; gap: 8px; margin-bottom: 1rem;
+    }
+    .ttbtn {
+      font-size: 0.78rem; font-weight: 500;
+      padding: 5px 14px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: transparent; color: rgba(255,255,255,0.5);
+      cursor: pointer; transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .ttbtn.active { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.3); }
+    .table-wrap { overflow-x: auto; max-height: 280px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.4); text-align: left; padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0;
+      background: #1a3a2a; }
+    td { padding: 7px 10px; color: rgba(255,255,255,0.65); border-bottom: 1px solid rgba(255,255,255,0.06); }
+    tr.fire-row td { color: var(--green-light); font-weight: 600; background: rgba(116,198,157,0.08); }
+
+    /* WHAT IS FIRE */
+    #que-es { max-width: 1080px; margin: 0 auto; padding: 6rem 2rem; }
+    .what-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; }
+    .what-text h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      color: var(--green-dark); margin-bottom: 1rem;
+    }
+    .what-text p { color: var(--text-secondary); margin-bottom: 1rem; }
+    .formula-box {
+      background: var(--green-pale); border-radius: var(--radius);
+      padding: 1.5rem; margin: 1.5rem 0;
+      border-left: 4px solid var(--green-accent);
+    }
+    .formula-box .formula { font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: var(--green-dark); }
+    .formula-box .formula-sub { font-size: 0.82rem; color: var(--text-secondary); margin-top: 6px; }
+    .what-cards { display: flex; flex-direction: column; gap: 12px; }
+    .what-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .what-card-icon { font-size: 1.4rem; margin-bottom: 8px; }
+    .what-card h3 { font-size: 0.95rem; font-weight: 600; color: var(--green-dark); margin-bottom: 4px; }
+    .what-card p { font-size: 0.85rem; color: var(--text-secondary); }
+
+    /* BROKERS */
+    #brokers { background: #f0f4f1; padding: 5rem 2rem; }
+    .brokers-inner { max-width: 1080px; margin: 0 auto; }
+    .brokers-inner h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+      color: var(--green-dark); margin-bottom: 0.5rem;
+    }
+    .brokers-inner .sub { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 2.5rem; }
+    .disclaimer { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .brokers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .broker-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.5rem;
+      box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .broker-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(26,58,42,0.1); }
+    .broker-name { font-size: 1.1rem; font-weight: 600; color: var(--green-dark); margin-bottom: 4px; }
+    .broker-tag {
+      display: inline-block; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 3px 8px; border-radius: 6px; margin-bottom: 10px;
+    }
+    .broker-tag.best { background: var(--green-pale); color: var(--green-accent); }
+    .broker-tag.popular { background: #fff8e6; color: var(--amber-dark); }
+    .broker-tag.pro { background: #f0f4ff; color: #3355bb; }
+    .broker-feats { list-style: none; margin-bottom: 1rem; }
+    .broker-feats li { font-size: 0.82rem; color: var(--text-secondary); padding: 3px 0; display: flex; gap: 6px; }
+    .broker-feats li::before { content: '✓'; color: var(--green-accent); font-weight: 700; }
+    .broker-link {
+      display: block; text-align: center; width: 100%;
+      background: var(--green-dark); color: #fff;
+      font-size: 0.85rem; font-weight: 500; padding: 9px;
+      border-radius: 8px; text-decoration: none; transition: background 0.2s;
+    }
+    .broker-link:hover { background: var(--green-mid); }
+
+    /* FAQ */
+    #faq { max-width: 760px; margin: 0 auto; padding: 6rem 2rem; }
+    #faq h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+      color: var(--green-dark); margin-bottom: 2.5rem; text-align: center;
+    }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q {
+      width: 100%; background: none; border: none; text-align: left;
+      font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500;
+      color: var(--green-dark); padding: 1.1rem 0; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .faq-q::after { content: '+'; font-size: 1.2rem; color: var(--green-accent); transition: transform 0.2s; }
+    .faq-q.open::after { transform: rotate(45deg); }
+    .faq-a { font-size: 0.88rem; color: var(--text-secondary); max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.2s; }
+    .faq-a.open { max-height: 300px; padding-bottom: 1rem; }
+
+    /* FOOTER */
+    footer {
+      background: var(--green-dark); color: rgba(255,255,255,0.5);
+      text-align: center; padding: 2rem;
+      font-size: 0.8rem;
+    }
+    footer a { color: rgba(255,255,255,0.6); text-decoration: none; }
+    footer p { margin-bottom: 0.5rem; }
+    .footer-legal { font-size: 0.72rem; color: rgba(255,255,255,0.3); max-width: 600px; margin: 1rem auto 0; }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp 0.6s ease forwards; }
+    .fade-up-d1 { animation-delay: 0.1s; opacity: 0; }
+    .fade-up-d2 { animation-delay: 0.2s; opacity: 0; }
+    .fade-up-d3 { animation-delay: 0.35s; opacity: 0; }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 2.5rem; }
+      .hero-stats { grid-template-columns: repeat(4, 1fr); }
+      .calc-grid { grid-template-columns: 1fr; }
+      .metrics-row { grid-template-columns: repeat(2, 1fr); }
+      .what-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .brokers-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .hero-stats { grid-template-columns: repeat(2, 1fr); }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#">FIRE<span>calc</span></a>
+    <ul class="nav-links">
+      <li><a href="#calculadora">Calculadora</a></li>
+      <li><a href="#que-es">¿Qué es FIRE?</a></li>
+      <li><a href="#brokers">Brokers</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a class="nav-cta" href="#calculadora">Calcular ahora</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section>
+  <div class="hero">
+    <div>
+      <div class="hero-eyebrow fade-up">Simulador gratuito · Método FIRE</div>
+      <h1 class="fade-up fade-up-d1">¿Cuándo podrás <em>dejar de trabajar</em>?</h1>
+      <p class="hero-desc fade-up fade-up-d2">Calcula tu número FIRE, proyecta tu patrimonio año a año y descubre en cuánto tiempo puedes alcanzar la independencia financiera con matemáticas reales.</p>
+      <div class="hero-actions fade-up fade-up-d3">
+        <a class="btn-primary" href="#calculadora">Usar la calculadora →</a>
+        <a class="btn-ghost" href="#que-es">¿Qué es FIRE?</a>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">4%</div>
+        <div class="hero-stat-label">Tasa de retirada segura histórica</div>
+      </div>
+      <div class="hero-stat accent">
+        <div class="hero-stat-num">25×</div>
+        <div class="hero-stat-label">Tu gasto anual = número FIRE</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">7%</div>
+        <div class="hero-stat-label">Rentabilidad media real S&P 500</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">100%</div>
+        <div class="hero-stat-label">Gratis y sin registro</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section id="calculadora">
+  <div class="calc-inner">
+    <h2 class="section-title">Tu simulador FIRE</h2>
+    <p class="section-sub">Ajusta los parámetros y ve cómo cambia tu proyección en tiempo real.</p>
+
+    <div class="calc-grid">
+
+      <!-- INPUTS -->
+      <div class="calc-panel">
+        <div class="panel-section">
+          <p class="panel-label">Tu situación actual</p>
+          <div class="slider-group">
+            <div class="slider-header"><label>Capital inicial</label><span class="slider-val" id="v-capital">10.000 €</span></div>
+            <input type="range" min="0" max="300000" step="1000" value="10000" id="s-capital" oninput="update()">
+          </div>
+          <div class="slider-group">
+            <div class="slider-header"><label>Ahorro mensual</label><span class="slider-val" id="v-ahorro">500 €</span></div>
+            <input type="range" min="0" max="8000" step="50" value="500" id="s-ahorro" oninput="update()">
+          </div>
+          <div class="slider-group">
+            <div class="slider-header"><label>Gastos mensuales</label><span class="slider-val" id="v-gastos">2.000 €</span></div>
+            <input type="range" min="500" max="10000" step="100" value="2000" id="s-gastos" oninput="update()">
+          </div>
+          <div class="slider-group">
+            <div class="slider-header"><label>Edad actual</label><span class="slider-val" id="v-edad">22 años</span></div>
+            <input type="range" min="18" max="65" step="1" value="22" id="s-edad" oninput="update()">
+          </div>
+        </div>
+
+        <hr class="panel-divider">
+
+        <div class="panel-section">
+          <p class="panel-label">Supuestos de inversión</p>
+          <div class="slider-group">
+            <div class="slider-header"><label>Rentabilidad anual nominal</label><span class="slider-val" id="v-rent">7,0%</span></div>
+            <input type="range" min="1" max="15" step="0.5" value="7" id="s-rent" oninput="update()">
+          </div>
+          <div class="slider-group">
+            <div class="slider-header"><label>Inflación anual</label><span class="slider-val" id="v-inf">3,0%</span></div>
+            <input type="range" min="0" max="8" step="0.5" value="3" id="s-inf" oninput="update()">
+          </div>
+          <div class="slider-group">
+            <div class="slider-header"><label>Tasa de retirada segura</label><span class="slider-val" id="v-trs">4,0%</span></div>
+            <input type="range" min="2" max="6" step="0.1" value="4" id="s-trs" oninput="update()">
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="calc-results">
+        <div class="metrics-row" id="metrics-row"></div>
+
+        <div class="chart-container">
+          <div class="table-toggle">
+            <button class="ttbtn active" id="btn-chart" onclick="showChart()">Gráfico</button>
+            <button class="ttbtn" id="btn-table" onclick="showTable()">Tabla anual</button>
+          </div>
+          <div id="chart-view">
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#74c69d"></div>Patrimonio acumulado</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#e76f51; opacity:0.7"></div>Objetivo FIRE</div>
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(116,198,157,0.35)"></div>Zona FIRE alcanzado</div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="fireChart" role="img" aria-label="Proyección del patrimonio hasta alcanzar FIRE"></canvas>
+            </div>
+          </div>
+          <div id="table-view" style="display:none">
+            <div class="table-wrap" id="table-content"></div>
+          </div>
+        </div>
+
+        <div class="fire-status-bar ok" id="fire-status"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUE ES FIRE -->
+<section id="que-es">
+  <div class="what-grid">
+    <div class="what-text">
+      <h2>¿Qué es el movimiento FIRE?</h2>
+      <p>FIRE (Financial Independence, Retire Early) es una filosofía financiera que busca alcanzar la independencia económica lo antes posible mediante tres pilares: <strong>alta tasa de ahorro, inversión sistemática</strong> e <strong>inversión en activos que generan rentas pasivas</strong>.</p>
+      <p>El movimiento popularizó reglas matemáticas sencillas para calcular cuándo puedes vivir de tus inversiones sin trabajar por obligación.</p>
+      <div class="formula-box">
+        <div class="formula">Número FIRE = Gastos anuales × 25</div>
+        <div class="formula-sub">Equivalente a aplicar la regla del 4%: si retiras el 4% anual de tu cartera, estadísticamente aguanta 30+ años (estudio Trinity, 1998).</div>
+      </div>
+      <p>La rentabilidad real usada en el simulador descuenta la inflación: <strong>rentabilidad real ≈ rentabilidad nominal − inflación</strong>. Así las cifras están en euros de hoy.</p>
+    </div>
+    <div class="what-cards">
+      <div class="what-card">
+        <div class="what-card-icon">🔥</div>
+        <h3>Fat FIRE</h3>
+        <p>Independencia con un estilo de vida elevado. Objetivo de cartera muy alto, mayor libertad de gasto en retiro.</p>
+      </div>
+      <div class="what-card">
+        <div class="what-card-icon">⚡</div>
+        <h3>Lean FIRE</h3>
+        <p>Independencia con gastos mínimos. Muy factible en poco tiempo pero requiere frugalidad en el retiro.</p>
+      </div>
+      <div class="what-card">
+        <div class="what-card-icon">⚖️</div>
+        <h3>Barista FIRE</h3>
+        <p>Independencia parcial: tus inversiones cubren la mayor parte, y trabajas un poco por gusto o beneficios.</p>
+      </div>
+      <div class="what-card">
+        <div class="what-card-icon">📈</div>
+        <h3>Coast FIRE</h3>
+        <p>Ya tienes suficiente invertido para que el interés compuesto te lleve solo al objetivo sin aportar más.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BROKERS -->
+<section id="brokers">
+  <div class="brokers-inner">
+    <h2>Brokers recomendados para empezar</h2>
+    <p class="sub">Para poner en práctica tu plan FIRE necesitas una cuenta donde invertir. Comparamos los más usados en España.</p>
+    <p class="disclaimer">⚠️ Nota: los siguientes enlaces pueden ser de afiliado. La recomendación es independiente y basada en características objetivas. Invertir conlleva riesgos; infórmate antes.</p>
+    <div class="brokers-grid">
+      <div class="broker-card">
+        <div class="broker-name">DEGIRO</div>
+        <span class="broker-tag best">Mejor para principiantes</span>
+        <ul class="broker-feats">
+          <li>Comisiones muy bajas en ETFs</li>
+          <li>Interfaz sencilla e intuitiva</li>
+          <li>Acceso a mercados globales</li>
+          <li>Sin mínimo de inversión</li>
+        </ul>
+        <a class="broker-link" href="https://www.degiro.es" target="_blank" rel="noopener">Ver DEGIRO →</a>
+      </div>
+      <div class="broker-card">
+        <div class="broker-name">Interactive Brokers</div>
+        <span class="broker-tag pro">Más potente</span>
+        <ul class="broker-feats">
+          <li>Comisiones ultra-bajas</li>
+          <li>Tipos de interés altos en efectivo</li>
+          <li>Acceso a todos los mercados</li>
+          <li>Herramientas profesionales</li>
+        </ul>
+        <a class="broker-link" href="https://www.interactivebrokers.com" target="_blank" rel="noopener">Ver IBKR →</a>
+      </div>
+      <div class="broker-card">
+        <div class="broker-name">MyInvestor</div>
+        <span class="broker-tag popular">Popular en España</span>
+        <ul class="broker-feats">
+          <li>Fondos indexados sin mínimo</li>
+          <li>Roboadvisor incluido</li>
+          <li>Cuenta remunerada al 2,5%</li>
+          <li>Interfaz en español</li>
+        </ul>
+        <a class="broker-link" href="https://myinvestor.es" target="_blank" rel="noopener">Ver MyInvestor →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <h2>Preguntas frecuentes</h2>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">¿Es la regla del 4% fiable para España?</button>
+    <div class="faq-a">La regla del 4% nació del estudio Trinity (EE.UU., 1998). Para España o Europa hay matices: mercados distintos, inflación diferente y fiscalidad. Se recomienda usar un 3,5% como tasa más conservadora para horizontes superiores a 30 años. El simulador te permite ajustarlo.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">¿Qué rentabilidad es realista esperar?</button>
+    <div class="faq-a">Históricamente, el S&P 500 ha dado ~10% nominal (~7% real descontando inflación). Un fondo indexado global (MSCI World) ha dado ~8-9% nominal. Usar 6-7% real es una estimación conservadora y razonable para planificación a largo plazo. Nadie puede garantizar rentabilidades futuras.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">¿Cómo tributan las inversiones en España?</button>
+    <div class="faq-a">Las ganancias patrimoniales y dividendos tributan como rendimientos del capital mobiliario: 19% hasta 6.000 €, 21% de 6.000 a 50.000 €, 23% de 50.000 a 200.000 € y 27% a partir de 200.000 €. Consulta siempre a un asesor fiscal para tu situación concreta.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">¿Qué diferencia hay entre rentabilidad nominal y real?</button>
+    <div class="faq-a">La rentabilidad nominal es lo que ves en tu cuenta. La real descuenta la inflación: si ganas un 7% pero la inflación es del 3%, tu poder adquisitivo real solo creció un 4%. Este simulador trabaja en términos reales para que los euros del futuro tengan el mismo valor que los de hoy.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">¿Cómo aumentar la tasa de ahorro rápidamente?</button>
+    <div class="faq-a">Las palancas más potentes son: aumentar ingresos (formación, cambio de trabajo, negociar salario), reducir los gastos más grandes (vivienda, coche), automatizar el ahorro el día que cobras, y evitar inflación de estilo de vida al subir el sueldo. Una tasa del 30-50% lleva a FIRE en 10-20 años.</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p><strong style="color:rgba(255,255,255,0.8)">FIREcalc</strong> · Calculadora gratuita de independencia financiera</p>
+  <p><a href="#calculadora">Calculadora</a> · <a href="#que-es">¿Qué es FIRE?</a> · <a href="#brokers">Brokers</a> · <a href="#faq">FAQ</a></p>
+  <p class="footer-legal">Esta web es de carácter informativo y educativo. No constituye asesoramiento financiero. Las proyecciones son estimaciones basadas en supuestos históricos y no garantizan rentabilidades futuras. Consulta a un asesor financiero cualificado antes de tomar decisiones de inversión. Esta página puede contener enlaces de afiliado.</p>
+</footer>
+
+<script>
+  let chart = null;
+  let viewMode = 'chart';
+
+  function fmt(n) {
+    return Math.round(n).toLocaleString('es-ES') + ' €';
+  }
+
+  function getInputs() {
+    return {
+      capital: +document.getElementById('s-capital').value,
+      ahorro: +document.getElementById('s-ahorro').value * 12,
+      gastos: +document.getElementById('s-gastos').value * 12,
+      edad: +document.getElementById('s-edad').value,
+      rent: +document.getElementById('s-rent').value / 100,
+      inf: +document.getElementById('s-inf').value / 100,
+      trs: +document.getElementById('s-trs').value / 100,
+    };
+  }
+
+  function calcProjection(inp) {
+    const { capital, ahorro, gastos, edad, rent, inf, trs } = inp;
+    const fireTarget = gastos / trs;
+    const rentReal = (1 + rent) / (1 + inf) - 1;
+    let patrimonio = capital;
+    let fireYear = null;
+    const data = [{ year: 0, patrimonio, edad }];
+    for (let y = 1; y <= 60; y++) {
+      patrimonio = patrimonio * (1 + rentReal) + ahorro;
+      if (fireYear === null && patrimonio >= fireTarget) fireYear = y;
+      data.push({ year: y, patrimonio: Math.max(0, patrimonio), edad: edad + y });
+      if (y > 55 && fireYear !== null) break;
+    }
+    return { data, fireTarget, fireYear };
+  }
+
+  function update() {
+    const inp = getInputs();
+
+    document.getElementById('v-capital').textContent = fmt(inp.capital);
+    document.getElementById('v-ahorro').textContent = fmt(inp.ahorro / 12);
+    document.getElementById('v-gastos').textContent = fmt(inp.gastos / 12);
+    document.getElementById('v-edad').textContent = inp.edad + ' años';
+    document.getElementById('v-rent').textContent = (inp.rent * 100).toFixed(1).replace('.', ',') + '%';
+    document.getElementById('v-inf').textContent = (inp.inf * 100).toFixed(1).replace('.', ',') + '%';
+    document.getElementById('v-trs').textContent = (inp.trs * 100).toFixed(1).replace('.', ',') + '%';
+
+    const { data, fireTarget, fireYear } = calcProjection(inp);
+    const fireEdad = fireYear ? inp.edad + fireYear : null;
+    const tasaAhorro = inp.ahorro + inp.gastos > 0 ? Math.round(inp.ahorro / (inp.ahorro + inp.gastos) * 100) : 0;
+    const rentaFIRE = Math.round(inp.gastos / 12);
+
+    document.getElementById('metrics-row').innerHTML = `
+      <div class="metric-card highlight">
+        <div class="metric-card-label">Objetivo FIRE</div>
+        <div class="metric-card-val">${Math.round(fireTarget / 1000)}K€</div>
+        <div class="metric-card-sub">${fmt(fireTarget)}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card-label">Años hasta FIRE</div>
+        <div class="metric-card-val">${fireYear ? fireYear : '60+'}</div>
+        <div class="metric-card-sub">${fireEdad ? 'A los ' + fireEdad + ' años' : 'Sube el ahorro'}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card-label">Tasa de ahorro</div>
+        <div class="metric-card-val">${tasaAhorro}%</div>
+        <div class="metric-card-sub">${tasaAhorro >= 50 ? 'Excelente' : tasaAhorro >= 25 ? 'Buena' : 'Mejorable'}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card-label">Renta pasiva/mes</div>
+        <div class="metric-card-val">${Math.round(rentaFIRE / 1000) >= 1 ? (rentaFIRE/1000).toFixed(1) + 'K€' : rentaFIRE + '€'}</div>
+        <div class="metric-card-sub">En FIRE</div>
+      </div>
+    `;
+
+    renderChart(data, fireTarget, fireYear);
+
+    if (viewMode === 'table') renderTable(data, fireTarget, fireYear);
+
+    let cls, msg;
+    if (!fireYear) {
+      cls = 'bad'; msg = 'Con los parámetros actuales no alcanzas FIRE en 60 años. Aumenta el ahorro mensual o la rentabilidad esperada.';
+    } else if (fireYear <= 15) {
+      cls = 'ok'; msg = `¡Camino FIRE muy rápido! Alcanzas la independencia financiera en ${fireYear} años, a los ${fireEdad}. 🔥`;
+    } else if (fireYear <= 30) {
+      cls = 'ok'; msg = `Buen ritmo. Alcanzas FIRE en ${fireYear} años, a los ${fireEdad}. Aumentar el ahorro mensual lo aceleraría.`;
+    } else {
+      cls = 'warn'; msg = `FIRE posible en ${fireYear} años (a los ${fireEdad}). Considera aumentar tu tasa de ahorro para llegar antes.`;
+    }
+    const el = document.getElementById('fire-status');
+    el.className = 'fire-status-bar ' + cls;
+    el.textContent = msg;
+  }
+
+  function renderChart(data, fireTarget, fireYear) {
+    const labels = data.map(d => d.year === 0 ? 'Hoy' : `A${d.year}`);
+    const valores = data.map(d => Math.round(d.patrimonio));
+    const target = data.map(() => Math.round(fireTarget));
+    const bgColors = valores.map((_, i) => (fireYear && i >= fireYear) ? 'rgba(116,198,157,0.4)' : 'rgba(116,198,157,0.2)');
+    const borderColors = valores.map((_, i) => (fireYear && i >= fireYear) ? '#40916c' : '#74c69d');
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('fireChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Patrimonio', data: valores, backgroundColor: bgColors, borderColor: borderColors, borderWidth: 1.5, borderRadius: 3, order: 2 },
+          { label: 'Objetivo FIRE', data: target, type: 'line', borderColor: '#e76f51', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false, order: 1 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + Math.round(ctx.raw).toLocaleString('es-ES') + ' €' } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { size: 10 }, color: 'rgba(255,255,255,0.4)' } },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.07)' },
+            ticks: {
+              font: { size: 10 }, color: 'rgba(255,255,255,0.4)',
+              callback: v => v >= 1000000 ? (v/1000000).toFixed(1) + 'M€' : v >= 1000 ? (v/1000).toFixed(0) + 'K€' : v + '€'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderTable(data, fireTarget, fireYear) {
+    const rows = data.map(d => {
+      const pct = Math.min(100, Math.round(d.patrimonio / fireTarget * 100));
+      const isFire = fireYear && d.year === fireYear;
+      return `<tr class="${isFire ? 'fire-row' : ''}">
+        <td>${d.year === 0 ? 'Hoy' : 'Año ' + d.year}</td>
+        <td>${d.edad}</td>
+        <td>${fmt(d.patrimonio)}</td>
+        <td>${fmt(fireTarget)}</td>
+        <td>${isFire ? '🔥 FIRE' : pct + '%'}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('table-content').innerHTML = `
+      <table>
+        <thead><tr><th>Período</th><th>Edad</th><th>Patrimonio</th><th>Objetivo</th><th>Progreso</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function showChart() {
+    viewMode = 'chart';
+    document.getElementById('chart-view').style.display = '';
+    document.getElementById('table-view').style.display = 'none';
+    document.getElementById('btn-chart').classList.add('active');
+    document.getElementById('btn-table').classList.remove('active');
+  }
+
+  function showTable() {
+    viewMode = 'table';
+    document.getElementById('chart-view').style.display = 'none';
+    document.getElementById('table-view').style.display = '';
+    document.getElementById('btn-chart').classList.remove('active');
+    document.getElementById('btn-table').classList.add('active');
+    const inp = getInputs();
+    const { data, fireTarget, fireYear } = calcProjection(inp);
+    renderTable(data, fireTarget, fireYear);
+  }
+
+  function toggleFaq(btn) {
+    const ans = btn.nextElementSibling;
+    const isOpen = ans.classList.contains('open');
+    document.querySelectorAll('.faq-a.open').forEach(el => el.classList.remove('open'));
+    document.querySelectorAll('.faq-q.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) { ans.classList.add('open'); btn.classList.add('open'); }
+  }
+
+  update();
+</script>
+</body>
+</html>
